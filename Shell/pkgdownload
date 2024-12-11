@@ -43,8 +43,14 @@ if [[ ${gcount} -eq 0 ]]; then
     exit
 fi
 
-# check for internet connectivity
-wget -q --tries=3 --timeout=3 --spider https://www.apple.com
+# check for internet connectivity if we have either wget or curl
+testurl="https://www.apple.com"
+
+if command -v wget &> /dev/null; then
+    wget -q --tries=3 --timeout=3 --spider "${testurl}"
+elif command -v curl &> /dev/null; then
+    curl -s -f --retry 3 --max-time 3 -o /dev/null "${testurl}"
+fi
 if [[ $? -ne 0 ]]; then
     # Exit code not 0
     echo "$(printclr ${red} "No connection, check your internet and try again")"
