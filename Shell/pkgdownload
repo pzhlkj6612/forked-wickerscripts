@@ -39,7 +39,7 @@ function printclr {
 }
 
 if [[ ${gcount} -eq 0 ]]; then
-    echo "[+] Verify the package name using '$(printclr ${cyan} "apt search")' and try again"
+    echo "[+] Re-synchronize the package index using '$(printclr ${cyan} "apt update")', verify the package name using '$(printclr ${cyan} "apt search")' and try again"
     exit
 fi
 
