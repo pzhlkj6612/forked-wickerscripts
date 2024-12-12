@@ -96,7 +96,7 @@ function check_if_successful {
     if [[ $1 -eq 0 ]]; then
         # Command success
         tput cuu1
-        echo "$2 $(printclr ${green} "[$(echo $'\u2714')]")"
+        echo "$2 $(printclr ${green} "[o]")"
     else
         # Command failed
         tput cuu1
@@ -121,7 +121,7 @@ function download_packages {
         if [[ $? -eq 0 ]]; then
             # Download success
             tput cuu1
-            echo "$(tput setaf 7)[-] Downloading: $(printclr ${cyan} "$name") $(printclr ${green} "[$(echo $'\u2714')]")"
+            echo "$(tput setaf 7)[-] Downloading: $(printclr ${cyan} "$name") $(printclr ${green} "[o]")"
         else
             # Download failed
             tput cuu1
