@@ -26,7 +26,7 @@ function print_banner {
     echo "+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+"
     echo "------------- Created by Wick3rman ------------"
     echo ""
-    tput setaf 7
+    tput sgr0
 }
 
 # prints a message with a given color.
@@ -121,11 +121,11 @@ function download_packages {
         if [[ $? -eq 0 ]]; then
             # Download success
             tput cuu1
-            echo "$(tput setaf 7)[-] Downloading: $(printclr ${cyan} "$name") $(printclr ${green} "[o]")"
+            echo "$(tput sgr0)[-] Downloading: $(printclr ${cyan} "$name") $(printclr ${green} "[o]")"
         else
             # Download failed
             tput cuu1
-            echo "$(tput setaf 7)[-] Downloading: $(printclr ${cyan} "$name") $(printclr ${red} "[x]")"
+            echo "$(tput sgr0)[-] Downloading: $(printclr ${cyan} "$name") $(printclr ${red} "[x]")"
         fi
     done < "$1"
 }
@@ -162,7 +162,7 @@ function get_dependencies {
 function get_global {
     # $1 package name
 
-    echo "$(tput setaf 7)[-] Found $gcount dependencies for:$(tput setaf 6) $1 $(tput setaf 7)"
+    echo "$(tput sgr0)[-] Found $gcount dependencies for:$(tput setaf 6) $1 $(tput sgr0)"
     # Store all dependencies to file.
     apt-cache depends $1 | grep -v "<" | grep -w "Depends:" > "$1_$filename"
     # Clean file from unnecessary characters.
@@ -219,7 +219,7 @@ if [[ $? -eq 0 ]]; then
         name="$line"
         # check if is package name
         if [[ $( echo ${name} | grep -v "<" | grep -icw "Depends:") -lt 1 ]]; then
-            #echo "[$] Round $round:$(tput setaf 6) $name $(tput setaf 7)"
+            #echo "[$] Round $round:$(tput setaf 6) $name $(tput sgr0)"
             pre=$(cat ${masterlist} | grep -ic "$name")
 
             #echo "Pret: $pre"
