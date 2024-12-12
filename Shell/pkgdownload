@@ -18,24 +18,33 @@ black=0; red=1; green=2; yellow=3; blue=4; magenta=5; cyan=6; white=7;
 
 ### Start function declarations
 
+# prints a message with a given color if we are in a terminal.
+if [ -t 1 ]; then
+    function printclr {
+        # $1 - Color code
+        # $2 - Message
+        tput setaf $1
+        echo -ne "$2"
+        tput sgr0
+    };
+else
+    function printclr {
+        # $2 - Message
+        echo -ne "$2"
+    };
+fi
+
 # prints the banner
 function print_banner {
-    tput setaf 3
-    echo "+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+"
-    echo "|  P a c k a g e  D o w n l o a d e r  v 1.4  |"
-    echo "+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+"
-    echo "------------- Created by Wick3rman ------------"
+    printclr "$yellow" "$(cat <<- EOF
+	+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+	|  P a c k a g e  D o w n l o a d e r  v 1.4  |
+	+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+	------------- Created by Wick3rman ------------
+	EOF
+    )"
     echo ""
-    tput sgr0
-}
-
-# prints a message with a given color.
-function printclr {
-	# $1 - Color code
-	# $2 - Message
-    tput setaf $1
-    echo -ne "$2"
-    tput sgr0
+    echo ""
 }
 
 if [[ ${gcount} -eq 0 ]]; then
@@ -91,16 +100,13 @@ function add_to_master_list {
 # checks if the last command was successful
 function check_if_successful {
     # $1 - Command exit code
-    # $2 - Message
 
     if [[ $1 -eq 0 ]]; then
         # Command success
-        tput cuu1
-        echo "$2 $(printclr ${green} "[o]")"
+        echo " $(printclr ${green} "[o]")"
     else
         # Command failed
-        tput cuu1
-        echo "$2 $(printclr ${red} "[x]")"
+        echo " $(printclr ${red} "[x]")"
     fi
 }
 
@@ -115,17 +121,15 @@ function download_packages {
     while read -r line
     do
         name="$line"
-        echo "[-] Downloading: $(printclr ${cyan} "$name")"
+        echo -n "[-] Downloading: $(printclr ${cyan} "$name")"
         apt-get download "$name" &> /dev/null
 
         if [[ $? -eq 0 ]]; then
             # Download success
-            tput cuu1
-            echo "$(tput sgr0)[-] Downloading: $(printclr ${cyan} "$name") $(printclr ${green} "[o]")"
+            echo " $(printclr ${green} "[o]")"
         else
             # Download failed
-            tput cuu1
-            echo "$(tput sgr0)[-] Downloading: $(printclr ${cyan} "$name") $(printclr ${red} "[x]")"
+            echo " $(printclr ${red} "[x]")"
         fi
     done < "$1"
 }
@@ -162,7 +166,7 @@ function get_dependencies {
 function get_global {
     # $1 package name
 
-    echo "$(tput sgr0)[-] Found $gcount dependencies for:$(tput setaf 6) $1 $(tput sgr0)"
+    echo "[-] Found $gcount dependencies for: $(printclr ${cyan} "$1")"
     # Store all dependencies to file.
     apt-cache depends $1 | grep -v "<" | grep -w "Depends:" > "$1_$filename"
     # Clean file from unnecessary characters.
@@ -219,7 +223,7 @@ if [[ $? -eq 0 ]]; then
         name="$line"
         # check if is package name
         if [[ $( echo ${name} | grep -v "<" | grep -icw "Depends:") -lt 1 ]]; then
-            #echo "[$] Round $round:$(tput setaf 6) $name $(tput sgr0)"
+            #echo "[$] Round $round: $(printclr "$cyan" $name)"
             pre=$(cat ${masterlist} | grep -ic "$name")
 
             #echo "Pret: $pre"
@@ -242,19 +246,19 @@ if [[ $? -eq 0 ]]; then
     rm ${fname}
 
     # package downloaded packages in a Tarball
-    echo "[-] Packaging downloaded packages to $(printclr ${cyan} "$package.tar.gz")"
+    echo -n "[-] Packaging downloaded packages to $(printclr ${cyan} "$package.tar.gz")"
     cd ..
 
     # use tar to compress and package.
     tar -zcvf "./$package.tar.gz" "$package/" &> /dev/null
 
     # [Check] packaging success
-    check_if_successful $? "[-] Packaging downloaded packages to $(printclr ${cyan} "$package.tar.gz")"
+    check_if_successful $?
 
-    echo "[-] Removing original directory"
+    echo -n "[-] Removing original directory"
     rm -r "./$package/"
     # [Check] if directory was removed
-    check_if_successful $? "[-] Removing original directory "
+    check_if_successful $?
 
     echo "$(printclr ${green} "[-] Operations completed in $(printclr ${yellow} "$(get_elapsed_time)")" )"
 else
