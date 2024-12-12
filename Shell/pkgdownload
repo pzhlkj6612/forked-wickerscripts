@@ -63,7 +63,7 @@ fi
 if [[ $? -ne 0 ]]; then
     # Exit code not 0
     echo "$(printclr ${red} "No connection, check your internet and try again")"
-    exit
+    exit 1
 fi
 
 # reset the timer
@@ -202,66 +202,67 @@ start_timer
 # create directory with package name
 mkdir "$package" &> /dev/null
 
-if [[ $? -eq 0 ]]; then
-    echo "$(printclr ${green} "[+] Created directory $(printclr ${cyan} "$package")")"
-    cd "$package"
-
-    # create masterlist file
-    touch ${masterlist}
-
-    # get dependencies for package and populate masterlist
-    get_global "$package"
-
-    # Sort and remove duplicates
-    echo "" >> ${fname}
-    sort *.list | uniq > ${fname}
-
-    # read the masterlist to get child dependencies
-    echo "[++] Checking for child dependencies"
-    while read -r line
-    do
-        name="$line"
-        # check if is package name
-        if [[ $( echo ${name} | grep -v "<" | grep -icw "Depends:") -lt 1 ]]; then
-            #echo "[$] Round $round: $(printclr "$cyan" $name)"
-            pre=$(cat ${masterlist} | grep -ic "$name")
-
-            #echo "Pret: $pre"
-            if [ ${pre} -eq 0 ]; then
-                get_dependencies ${name}
-                add_to_master_list ${name}
-            fi
-        fi
-        # it++
-        it=$(expr ${it} + 1)
-    done < "$fname"
-
-    # delete all list files
-    rm *.list
-
-    # download packages from masterlist
-    download_packages ${masterlist}
-
-    # delete *.deb.list file
-    rm ${fname}
-
-    # package downloaded packages in a Tarball
-    echo -n "[-] Packaging downloaded packages to $(printclr ${cyan} "$package.tar.gz")"
-    cd ..
-
-    # use tar to compress and package.
-    tar -zcvf "./$package.tar.gz" "$package/" &> /dev/null
-
-    # [Check] packaging success
-    check_if_successful $?
-
-    echo -n "[-] Removing original directory"
-    rm -r "./$package/"
-    # [Check] if directory was removed
-    check_if_successful $?
-
-    echo "$(printclr ${green} "[-] Operations completed in $(printclr ${yellow} "$(get_elapsed_time)")" )"
-else
+if [[ $? -ne 0 ]]; then
     echo "$(printclr ${red} "[!]")  Failed to create directory $(printclr ${cyan} "$package"). Delete existing directory or make sure you have sufficient permissions."
+    exit 1
 fi
+
+echo "$(printclr ${green} "[+] Created directory $(printclr ${cyan} "$package")")"
+cd "$package"
+
+# create masterlist file
+touch ${masterlist}
+
+# get dependencies for package and populate masterlist
+get_global "$package"
+
+# Sort and remove duplicates
+echo "" >> ${fname}
+sort *.list | uniq > ${fname}
+
+# read the masterlist to get child dependencies
+echo "[++] Checking for child dependencies"
+while read -r line
+do
+    name="$line"
+    # check if is package name
+    if [[ $( echo ${name} | grep -v "<" | grep -icw "Depends:") -lt 1 ]]; then
+        #echo "[$] Round $round: $(printclr "$cyan" $name)"
+        pre=$(cat ${masterlist} | grep -ic "$name")
+
+        #echo "Pret: $pre"
+        if [ ${pre} -eq 0 ]; then
+            get_dependencies ${name}
+            add_to_master_list ${name}
+        fi
+    fi
+    # it++
+    it=$(expr ${it} + 1)
+done < "$fname"
+
+# delete all list files
+rm *.list
+
+# download packages from masterlist
+download_packages ${masterlist}
+
+# delete *.deb.list file
+rm ${fname}
+
+# package downloaded packages in a Tarball
+echo -n "[-] Packaging downloaded packages to $(printclr ${cyan} "$package.tar.gz")"
+cd ..
+
+# use tar to compress and package.
+tar -zcvf "./$package.tar.gz" "$package/" &> /dev/null
+
+# [Check] packaging success
+check_if_successful $?
+
+echo -n "[-] Removing original directory"
+rm -r "./$package/"
+# [Check] if directory was removed
+check_if_successful $?
+
+echo "$(printclr ${green} "[-] Operations completed in $(printclr ${yellow} "$(get_elapsed_time)")" )"
 ### End main
