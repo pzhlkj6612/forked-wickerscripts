@@ -8,7 +8,6 @@ fi
 
 package="$1"
 filename="deb.list"
-fname="complete_deb.txt"
 gcount=$(apt-cache depends ${package} | grep -v "<" | grep -icw "Depends:")
 it=0
 masterlist="dependencies_master_$RANDOM.mlist"
@@ -204,38 +203,11 @@ if [[ $? -eq 0 ]]; then
     # get dependencies for package and populate masterlist
     get_global "$package"
 
-    # Sort and remove duplicates
-    echo "" >> ${fname}
-    sort *.list | uniq > ${fname}
-
-    # read the masterlist to get child dependencies
-    echo "[++] Checking for child dependencies"
-    while read -r line
-    do
-        name="$line"
-        # check if is package name
-        if [[ $( echo ${name} | grep -v "<" | grep -icw "Depends:") -lt 1 ]]; then
-            #echo "[$] Round $round:$(tput setaf 6) $name $(tput setaf 7)"
-            pre=$(is_not_present "$name")
-
-            #echo "Pret: $pre"
-            if [ ${pre} -eq 0 ]; then
-                get_dependencies ${name}
-                add_to_master_list ${name}
-            fi
-        fi
-        # it++
-        it=$(expr ${it} + 1)
-    done < "$fname"
-
     # delete all list files
     rm *.list
 
     # download packages from masterlist
     download_packages ${masterlist}
-
-    # delete *.deb.list file
-    rm ${fname}
 
     # package downloaded packages in a Tarball
     echo "[-] Packaging downloaded packages to $(printclr ${cyan} "$package.tar.gz")"
