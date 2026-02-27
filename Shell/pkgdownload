@@ -69,7 +69,7 @@ function get_elapsed_time {
 # check if a dependency(package) is not present in the masterlist
 function is_not_present {
     # $1 package name
-    echo $(cat ${masterlist} | grep -ic "$1")
+    echo $(cat ${masterlist} | grep -Fxc "$1")
 }
 
 # add a dependecy(package) to the masterlist
@@ -214,7 +214,7 @@ if [[ $? -eq 0 ]]; then
         # check if is package name
         if [[ $( echo ${name} | grep -v "<" | grep -icw "Depends:") -lt 1 ]]; then
             #echo "[$] Round $round:$(tput setaf 6) $name $(tput setaf 7)"
-            pre=$(cat ${masterlist} | grep -ic "$name")
+            pre=$(is_not_present "$name")
 
             #echo "Pret: $pre"
             if [ ${pre} -eq 0 ]; then
