@@ -135,6 +135,8 @@ function get_dependencies {
     sed -i -e 's/ //g' "${p1}_${filename}"
 
     # Local count
+    local lcount
+    local lit
     lcount=$(apt-cache depends ${p1} | grep -v "<" | grep -icw "Depends:")
     lit=0
 
