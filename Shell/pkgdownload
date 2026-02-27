@@ -8,8 +8,6 @@ fi
 
 package="$1"
 filename="deb.list"
-gcount=$(apt-cache depends ${package} | grep -v "<" | grep -icw "Depends:")
-it=0
 masterlist="dependencies_master_$RANDOM.mlist"
 
 # colors
@@ -37,7 +35,7 @@ function printclr {
     tput sgr0
 }
 
-if [[ ${gcount} -eq 0 ]]; then
+if [[ $(apt-cache depends ${package} | grep -v "<" | grep -icw "Depends:") -eq 0 ]]; then
     echo "[+] Verify the package name using '$(printclr ${cyan} "apt search")' and try again"
     exit
 fi
@@ -156,32 +154,8 @@ function get_dependencies {
 # gets dependencies for a package.
 function get_global {
     # $1 package name
-
-    echo "$(tput setaf 7)[-] Found $gcount dependencies for:$(tput setaf 6) $1 $(tput setaf 7)"
-    # Store all dependencies to file.
-    apt-cache depends $1 | grep -v "<" | grep -w "Depends:" > "$1_$filename"
-    # Clean file from unnecessary characters.
-    sed -i -e 's/[<>|:]//g' "$1_$filename"
-    sed -i -e 's/Depends//g' "$1_$filename"
-    sed -i -e 's/ //g' "$1_$filename"
-
-    while [ ${it} -lt ${gcount} ]
-    do
-        while read -r line
-        do
-            name="$line"
-            round=$(expr ${it} + 1)
-
-            if [[ $( echo ${name} | grep -v "<" | grep -c -w "Depends:") -lt 1 ]]; then
-                if [[ $(is_not_present "$name") -eq 0 ]]; then
-                    #echo "[-] Adding ${name} to masterlist"
-                    add_to_master_list ${name}
-                    get_dependencies ${name}
-                fi
-            fi
-            it=$(expr ${it} + 1)
-        done < "$1_$filename"
-    done
+    add_to_master_list "$1"
+    get_dependencies "$1"
 }
 
 ### End function declarations
